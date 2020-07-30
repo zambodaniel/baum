@@ -59,10 +59,13 @@ class CategoryTreeRebuildingTest extends CategoryTestCase {
     MultiscopedCategory::rebuild();
     $this->assertTrue(MultiscopedCategory::isValidNestedSet());
 
-    $this->assertEquals($root, $this->categories('A', 'MultiScopedCategory'));
+    $this->assertTrue($root->is($this->categories('A', 'MultiScopedCategory')));
 
     $expected = array($child1, $child2);
-    $this->assertEquals($expected, $this->categories('A', 'MultiScopedCategory')->children()->get()->all());
+    $children = $this->categories('A', 'MultiScopedCategory')->children()->get()->all();
+    foreach ($expected as $key => $category) {
+        $this->assertTrue($category->is($children[$key]));
+    }
   }
 
   public function testRebuildWithMultipleScopes() {

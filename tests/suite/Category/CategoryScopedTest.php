@@ -284,7 +284,7 @@ class CategoryScopedTest extends CategoryTestCase {
 
   // TODO: Moving nodes between scopes is problematic ATM. Fix it or find a work-around.
   public function testMoveNodeBetweenScopes() {
-    $this->markTestSkipped();
+    $this->markTestIncomplete("Moving nodes between scopes is problematic ATM. Fix it or find a work-around");
 
     // $root1    = Menu::create(array('caption' => 'TL1', 'site_id' => 1, 'language' => 'en'));
     // $child11  = Menu::create(array('caption' => 'C11', 'site_id' => 1, 'language' => 'en'));

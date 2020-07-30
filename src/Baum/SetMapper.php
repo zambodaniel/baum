@@ -2,6 +2,7 @@
 namespace Baum;
 
 use \Closure;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Contracts\ArrayableInterface;
 use Baum\Node;
 
@@ -57,11 +58,11 @@ class SetMapper {
    * Maps a tree structure into the database without unguarding nor wrapping
    * inside a transaction.
    *
-   * @param   array|\Illuminate\Support\Contracts\ArrayableInterface
+   * @param   array|Arrayable
    * @return  boolean
    */
   public function mapTree($nodeList) {
-    $tree = $nodeList instanceof ArrayableInterface ? $nodeList->toArray() : $nodeList;
+    $tree = $nodeList instanceof Arrayable ? $nodeList->toArray() : $nodeList;
 
     $affectedKeys = array();
 
@@ -82,13 +83,14 @@ class SetMapper {
     return $this->childrenKeyName;
   }
 
-  /**
-   * Maps a tree structure into the database
-   *
-   * @param   array   $tree
-   * @param   mixed   $parent
-   * @return  boolean
-   */
+    /**
+     * Maps a tree structure into the database
+     *
+     * @param array $tree
+     * @param null $parentKey
+     * @param array $affectedKeys
+     * @return  boolean
+     */
   protected function mapTreeRecursive(array $tree, $parentKey = null, &$affectedKeys = array()) {
     // For every attribute entry: We'll need to instantiate a new node either
     // from the database (if the primary key was supplied) or a new instance. Then,

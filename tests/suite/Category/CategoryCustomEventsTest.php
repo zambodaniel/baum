@@ -9,18 +9,23 @@ class CategoryCustomEventsTest extends CategoryTestCase {
   }
 
   public function testMovementEventsFire() {
+    $child1 = $this->categories('Child 1');
+    $child3 = $this->categories('Child 3');
     $dispatcher = Category::getEventDispatcher();
-    Category::setEventDispatcher($events = m::mock('Illuminate\Events\Dispatcher'));
+    $events = m::mock('Illuminate\Events\Dispatcher');
+    $events->makePartial();
+    Category::setEventDispatcher($events);
 
-    $child = $this->categories('Child 1');
+    $events->shouldReceive('until')->once()->with('eloquent.moving: '.get_class($child1), $child1)->andReturn(true);
+    $events->shouldReceive('dispatch')->once()->with('eloquent.moved: '.get_class($child1), $child1)->andReturn(true);
 
-    $events->shouldReceive('until')->once()->with('eloquent.moving: '.get_class($child), $child)->andReturn(true);
-    $events->shouldReceive('fire')->once()->with('eloquent.moved: '.get_class($child), $child)->andReturn(true);
-
-    $child->moveToRightOf($this->categories('Child 3'));
+    $child1->moveToRightOf($child3);
 
     Category::unsetEventDispatcher();
     Category::setEventDispatcher($dispatcher);
+      if ($container = Mockery::getContainer()) {
+          $this->addToAssertionCount($container->mockery_getExpectationCount());
+      }
   }
 
   public function testMovementHaltsWhenReturningFalseFromMoving() {

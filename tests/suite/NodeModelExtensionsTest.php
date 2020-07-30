@@ -3,7 +3,7 @@
 use Mockery as m;
 use Illuminate\Database\Capsule\Manager as DB;
 
-class NodeModelExtensionsTest extends PHPUnit_Framework_TestCase {
+class NodeModelExtensionsTest extends \PHPUnit\Framework\TestCase {
 
   public static function setUpBeforeClass() {
     with(new CategoryMigrator)->up();
@@ -51,29 +51,35 @@ class NodeModelExtensionsTest extends PHPUnit_Framework_TestCase {
   public function testMoving() {
     $dispatcher = Category::getEventDispatcher();
 
-    Category::setEventDispatcher($events = m::mock('Illuminate\Contracts\Events\Dispatcher'));
+    Category::setEventDispatcher($events = m::mock('Illuminate\Events\Dispatcher')->makePartial());
 
     $closure = function() {};
-    $events->shouldReceive('listen')->once()->with('eloquent.moving: '.get_class(new Category), $closure, 0);
+    $events->shouldReceive('listen')->once()->with('eloquent.moving: '.get_class(new Category), $closure);
     Category::moving($closure);
 
     Category::unsetEventDispatcher();
 
     Category::setEventDispatcher($dispatcher);
+      if ($container = Mockery::getContainer()) {
+          $this->addToAssertionCount($container->mockery_getExpectationCount());
+      }
   }
 
   public function testMoved() {
     $dispatcher = Category::getEventDispatcher();
 
-    Category::setEventDispatcher($events = m::mock('Illuminate\Contracts\Events\Dispatcher'));
+    Category::setEventDispatcher($events = m::mock('Illuminate\Events\Dispatcher')->makePartial());
 
     $closure = function() {};
-    $events->shouldReceive('listen')->once()->with('eloquent.moved: '.get_class(new Category), $closure, 0);
+    $events->shouldReceive('listen')->once()->with('eloquent.moved: '.get_class(new Category), $closure);
     Category::moved($closure);
 
     Category::unsetEventDispatcher();
 
     Category::setEventDispatcher($dispatcher);
+      if ($container = Mockery::getContainer()) {
+          $this->addToAssertionCount($container->mockery_getExpectationCount());
+      }
   }
 
   public function testReloadResetsChangesOnFreshNodes() {
@@ -92,7 +98,7 @@ class NodeModelExtensionsTest extends PHPUnit_Framework_TestCase {
     $node->lft = 10;
     $node->reload();
 
-    $this->assertEquals($this->categories('Some node'), $node);
+    $this->assertTrue($this->categories('Some node')->is($node));
   }
 
   public function testReloadResetsChangesOnDeletedNodes() {
@@ -137,8 +143,8 @@ class NodeModelExtensionsTest extends PHPUnit_Framework_TestCase {
     $builder = $category->newNestedSetQuery();
     $query = $builder->getQuery();
 
-    $this->assertNull($query->wheres);
-    $this->assertNotEmpty($query->orders);
+    $this->assertTrue(count($query->wheres) === 0);
+    $this->assertFalse(count($query->orders) === 0);
     $this->assertEquals($category->getLeftColumnName(), $category->getOrderColumnName());
     $this->assertEquals($category->getQualifiedLeftColumnName(), $category->getQualifiedOrderColumnName());
     $this->assertEquals($category->getQualifiedOrderColumnName(), $query->orders[0]['column']);
@@ -149,8 +155,8 @@ class NodeModelExtensionsTest extends PHPUnit_Framework_TestCase {
     $builder = $category->newNestedSetQuery();
     $query = $builder->getQuery();
 
-    $this->assertNull($query->wheres);
-    $this->assertNotEmpty($query->orders);
+    $this->assertTrue(count($query->wheres) === 0);
+    $this->assertFalse(count($query->orders) === 0);
     $this->assertEquals('name', $category->getOrderColumnName());
     $this->assertEquals('categories.name', $category->getQualifiedOrderColumnName());
     $this->assertEquals($category->getQualifiedOrderColumnName(), $query->orders[0]['column']);
@@ -159,7 +165,7 @@ class NodeModelExtensionsTest extends PHPUnit_Framework_TestCase {
   public function testNewNestedSetQueryIncludesScopedColumns() {
     $category = new Category;
     $simpleQuery = $category->newNestedSetQuery()->getQuery();
-    $this->assertNull($simpleQuery->wheres);
+    $this->assertTrue(count($simpleQuery->wheres) === 0);
 
     $scopedCategory = new ScopedCategory;
     $scopedQuery = $scopedCategory->newNestedSetQuery()->getQuery();

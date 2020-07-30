@@ -1,6 +1,7 @@
 <?php
 namespace Baum\Extensions\Eloquent;
 
+use Closure;
 use Illuminate\Database\Eloquent\Model as BaseModel;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -8,7 +9,11 @@ use Baum\Extensions\Query\Builder as QueryBuilder;
 
 abstract class Model extends BaseModel {
 
-  /**
+    protected $observables = [
+        'moving', 'moved'
+    ];
+
+    /**
    * Reloads the model from the database.
    *
    * @return \Baum\Node
@@ -35,34 +40,27 @@ abstract class Model extends BaseModel {
     return $this;
   }
 
-  /**
-   * Get the observable event names.
-   *
-   * @return array
-   */
-  public function getObservableEvents() {
-    return array_merge(array('moving', 'moved'), parent::getObservableEvents());
-  }
+    /**
+     * Register a moving model event with the dispatcher.
+     *
+     * @param  Closure|string  $callback
+     * @return void
+     */
+    public static function moving($callback)
+    {
+        static::registerModelEvent('moving', $callback);
+    }
 
-  /**
-   * Register a moving model event with the dispatcher.
-   *
-   * @param  Closure|string  $callback
-   * @return void
-   */
-  public static function moving($callback, $priority = 0) {
-    static::registerModelEvent('moving', $callback, $priority);
-  }
-
-  /**
-   * Register a moved model event with the dispatcher.
-   *
-   * @param  Closure|string  $callback
-   * @return void
-   */
-  public static function moved($callback, $priority = 0) {
-    static::registerModelEvent('moved', $callback, $priority);
-  }
+    /**
+     * Register a moved model event with the dispatcher.
+     *
+     * @param  Closure|string  $callback
+     * @return void
+     */
+    public static function moved($callback)
+    {
+        static::registerModelEvent('moved', $callback);
+    }
 
   /**
    * Get a new query builder instance for the connection.
