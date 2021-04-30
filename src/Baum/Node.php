@@ -3,6 +3,7 @@ namespace Baum;
 
 use Baum\Extensions\Eloquent\Collection;
 use Baum\Extensions\Eloquent\Model;
+use Illuminate\Support\Str;
 
 /**
  * Node
@@ -337,7 +338,7 @@ abstract class Node extends Model {
 
     if ( $this->isScoped() ) {
       foreach($this->scoped as $scopeFld)
-        $builder->where($scopeFld, '=', $this->$scopeFld);
+        $builder->where($this->qualifyColumn($scopeFld), '=', $this->$scopeFld);
     }
 
     return $builder;
@@ -468,7 +469,10 @@ abstract class Node extends Model {
    * @return \Illuminate\Database\Query\Builder
    */
   public function scopeWithoutNode($query, $node) {
-    return $query->where($node->getKeyName(), '!=', $node->getKey());
+      /**
+       * @var Node $node
+       */
+      return $query->where($node->getQualifiedKeyName(), '!=', $node->getKey());
   }
 
   /**
@@ -723,8 +727,8 @@ abstract class Node extends Model {
    */
   public function descendantsAndSelf() {
     return $this->newNestedSetQuery()
-                ->where($this->getLeftColumnName(), '>=', $this->getLeft())
-                ->where($this->getLeftColumnName(), '<', $this->getRight());
+                ->where($this->getQualifiedLeftColumnName(), '>=', $this->getLeft())
+                ->where($this->getQualifiedLeftColumnName(), '<', $this->getRight());
   }
 
   /**
@@ -1081,7 +1085,7 @@ abstract class Node extends Model {
 
       $level = $self->getLevel();
 
-      $self->newNestedSetQuery()->where($self->getKeyName(), '=', $self->getKey())->update(array($self->getDepthColumnName() => $level));
+      $self->newNestedSetQuery()->where($self->getQualifiedKeyName(), '=', $self->getKey())->update(array($self->getDepthColumnName() => $level));
       $self->setAttribute($self->getDepthColumnName(), $level);
     });
 
@@ -1099,13 +1103,13 @@ abstract class Node extends Model {
     $this->getConnection()->transaction(function() use ($self) {
       $self->reload();
 
-      $self->descendantsAndSelf()->select($self->getKeyName())->lockForUpdate()->get();
+      $self->descendantsAndSelf()->select($self->getQualifiedKeyName())->lockForUpdate()->get();
 
       $oldDepth = !is_null($self->getDepth()) ? $self->getDepth() : 0;
 
       $newDepth = $self->getLevel();
 
-      $self->newNestedSetQuery()->where($self->getKeyName(), '=', $self->getKey())->update(array($self->getDepthColumnName() => $newDepth));
+      $self->newNestedSetQuery()->where($self->getQualifiedKeyName(), '=', $self->getKey())->update(array($self->getDepthColumnName() => $newDepth));
       $self->setAttribute($self->getDepthColumnName(), $newDepth);
 
       $diff = $newDepth - $oldDepth;
@@ -1136,7 +1140,7 @@ abstract class Node extends Model {
       $rgt    = $self->getRight();
 
       // Apply a lock to the rows which fall past the deletion point
-      $self->newNestedSetQuery()->where($lftCol, '>=', $lft)->select($self->getKeyName())->lockForUpdate()->get();
+      $self->newNestedSetQuery()->where($lftCol, '>=', $lft)->select($self->getQualifiedKeyName())->lockForUpdate()->get();
 
       // Prune children
       $self->newNestedSetQuery()->where($lftCol, '>', $lft)->where($rgtCol, '<', $rgt)->delete();
@@ -1201,7 +1205,6 @@ abstract class Node extends Model {
    */
   public static function getNestedList($column, $key = null, $seperator = ' ') {
     $instance = new static;
-
     $key = $key ?: $instance->getKeyName();
     $depthColumn = $instance->getDepthColumnName();
 
