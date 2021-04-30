@@ -170,13 +170,13 @@ class NodeModelExtensionsTest extends \PHPUnit\Framework\TestCase {
     $scopedCategory = new ScopedCategory;
     $scopedQuery = $scopedCategory->newNestedSetQuery()->getQuery();
     $this->assertCount(1, $scopedQuery->wheres);
-    $this->assertEquals($scopedCategory->getScopedColumns(), array_map(function($elem) {
+    $this->assertEquals($scopedCategory->getQualifiedScopedColumns(), array_map(function($elem) {
       return $elem['column']; }, $scopedQuery->wheres));
 
     $multiScopedCategory = new MultiScopedCategory;
     $multiScopedQuery = $multiScopedCategory->newNestedSetQuery()->getQuery();
     $this->assertCount(2, $multiScopedQuery->wheres);
-    $this->assertEquals($multiScopedCategory->getScopedColumns(), array_map(function($elem) {
+    $this->assertEquals($multiScopedCategory->getQualifiedScopedColumns(), array_map(function($elem) {
       return $elem['column']; }, $multiScopedQuery->wheres));
   }
 
